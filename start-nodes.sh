@@ -1,5 +1,7 @@
 #!/bin/bash 
 
+# start-nodes.sh
+
 set -x
 
 base=`pwd`

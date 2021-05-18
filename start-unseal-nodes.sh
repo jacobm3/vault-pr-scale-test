@@ -6,11 +6,14 @@ x=$1
 base=`pwd`
 
 # for each node loop
-sudo ifconfig lo:$x 127.0.1.$x up
+#sudo ifconfig lo:$x 127.0.1.$x up
 
 thisbase=$base/raft-vault_$x
 sudo rm -fr $thisbase
 mkdir -p $thisbase
+
+port=$(( 8200 + 2 * $x ))
+cluster_port=$(( $port + 1 ))
 
 cat > vault_${x}.hcl <<EOF
   storage "raft" {
@@ -18,13 +21,12 @@ cat > vault_${x}.hcl <<EOF
     node_id = "vault_${x}"
   }
   listener "tcp" {
-    address = "127.0.1.${x}:8200"
-    #cluster_address = "127.0.1.${x}:8201"
+    address = "127.0.1.1:$port"
     tls_disable = true
   }
   disable_mlock = true
-  cluster_addr = "http://127.0.1.${x}:8201"
-  api_addr = "http://127.0.1.${x}:8200"
+  cluster_addr = "http://127.0.1.1:$cluster_port"
+  api_addr = "http://127.0.1.1:$port"
 EOF
 
 echo
@@ -33,7 +35,7 @@ vault-ent server -config=vault_${x}.hcl > log.${x} 2>&1 &
 sleep 1
 #sudo vault server -config=vault_${x}.hcl 
 
-export VAULT_ADDR=http://127.0.1.$x:8200
+export VAULT_ADDR=http://127.0.1.1:$port
 echo
 echo "Initializing vault server $x"
 vault operator init -format=json -n 1 -t 1 > init.$x.json
@@ -41,7 +43,7 @@ roottoken=`jq -r .root_token < init.$x.json`
 key=`jq -r .unseal_keys_b64[0] < init.$x.json`
 
 cat > env.$x.sh <<EOF
-export VAULT_ADDR=http://127.0.1.$x:8200
+export VAULT_ADDR=http://127.0.1.1:$port
 export VAULT_TOKEN=$roottoken
 EOF
 

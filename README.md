@@ -4,5 +4,6 @@ Shell scripts to find the max number of performance replicas a Vault node can su
 
 Start with master.sh.
 
+![Alt text](image.png?raw=true "Title")
 
 ![alt text](https://github.com/jacobm3/vault-pr-scale-test/blob/master/image.png?raw=true)
